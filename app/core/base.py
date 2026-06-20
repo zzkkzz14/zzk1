@@ -61,16 +61,25 @@ class SkillRegistry:
         """按类型查找"""
         return [s for s in self._skills.values() if s.skill_type == skill_type]
     
-    def find_by_keyword(self, keyword: str) -> list[Skill]:
+    def find_by_keyword(self, query: str) -> list[Skill]:
         """按关键词查找"""
-        keyword_lower = keyword.lower()
+        query_lower = query.lower()
         results = []
         for skill in self._skills.values():
-            # 检查触发关键词
-            if any(keyword_lower in kw.lower() for kw in skill.trigger_keywords):
-                results.append(skill)
+            matched = False
+            # 检查触发关键词（关键词中的任意词是否出现在查询中）
+            for kw in skill.trigger_keywords:
+                kw_lower = kw.lower()
+                if kw_lower in query_lower:
+                    matched = True
+                    break
             # 检查标签
-            elif any(keyword_lower in tag.lower() for tag in skill.tags):
+            if not matched:
+                for tag in skill.tags:
+                    if tag.lower() in query_lower:
+                        matched = True
+                        break
+            if matched:
                 results.append(skill)
         return results
 
