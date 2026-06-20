@@ -59,7 +59,7 @@ def init_default_skills():
             "不要省略必要的 import",
             "不要过度解释基础概念"
         ],
-        trigger_keywords=["写代码", "实现", "编程", "开发", "bug", "调试"],
+        trigger_keywords=["写代码", "写", "代码", "实现", "编程", "开发", "bug", "调试", "函数", "类", "接口", "API", "脚本"],
         tags=["code", "development", "programming"]
     )
     

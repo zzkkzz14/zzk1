@@ -102,6 +102,32 @@ async def list_skills(
     )
 
 
+@router.get("/debug")
+async def debug_skills():
+    """调试：查看所有 Skill 的触发关键词"""
+    skills = registry.list_all()
+    return [
+        {
+            "id": s.id,
+            "name": s.name,
+            "trigger_keywords": s.trigger_keywords,
+            "tags": s.tags
+        }
+        for s in skills
+    ]
+
+
+@router.get("/debug/match/{query}")
+async def debug_match(query: str):
+    """调试：测试关键词匹配"""
+    skills = registry.find_by_keyword(query)
+    return {
+        "query": query,
+        "matched_count": len(skills),
+        "matched_skills": [{"id": s.id, "name": s.name} for s in skills]
+    }
+
+
 @router.get("/{skill_id}", response_model=SkillResponse)
 async def get_skill(skill_id: str):
     """获取指定 Skill"""
