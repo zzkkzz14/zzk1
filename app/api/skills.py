@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, HTTPException
 from typing import Optional
+from pydantic import BaseModel, Field
 
 from ..models.skill import Skill, SkillType, SkillPriority, ProcessStep, OutputConstraint
 from ..core.base import registry
@@ -13,9 +14,28 @@ from ..schemas.request import (
     SkillResponse,
     SkillListResponse
 )
+from ..services.agnes_image import agnes_service
 
 router = APIRouter(prefix="/skills", tags=["skills"])
 processor = SkillProcessor()
+
+
+class ImageGenerateRequest(BaseModel):
+    """图像生成请求"""
+    prompt: str = Field(..., description="提示词")
+    size: str = Field(default="1024x1024", description="图像尺寸")
+    n: int = Field(default=1, description="生成数量")
+    negative_prompt: Optional[str] = Field(None, description="负面提示词")
+
+
+class ImageGenerateFromImageRequest(BaseModel):
+    """图生图请求"""
+    image: str = Field(..., description="输入图像（URL 或 base64 编码）")
+    prompt: str = Field(..., description="提示词")
+    size: str = Field(default="1024x1024", description="图像尺寸")
+    n: int = Field(default=1, description="生成数量")
+    strength: float = Field(default=0.7, description="变换强度")
+    negative_prompt: Optional[str] = Field(None, description="负面提示词")
 
 
 @router.post("/", response_model=SkillResponse)
@@ -189,4 +209,67 @@ async def validate_process(skill_id: str, context: dict):
     return {
         "valid": len(errors) == 0,
         "errors": errors
+    }
+
+
+@router.post("/image/generate")
+async def generate_image(request: ImageGenerateRequest):
+    """
+    使用 Agnes Image 2.1 Flash 生成图像
+    
+    需要配置 AGNES_API_KEY 环境变量
+    """
+    if not agnes_service.api_key:
+        raise HTTPException(status_code=400, detail="请配置 AGNES_API_KEY 环境变量")
+    
+    try:
+        result = agnes_service.generate_image(
+            prompt=request.prompt,
+            size=request.size,
+            n=request.n,
+            negative_prompt=request.negative_prompt
+        )
+        return {
+            "success": True,
+            "model": "agnes-image-2.1-flash",
+            "data": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/image/generate-from-image")
+async def generate_image_from_image(request: ImageGenerateFromImageRequest):
+    """
+    使用 Agnes Image 2.1 Flash 进行图生图
+    
+    需要配置 AGNES_API_KEY 环境变量
+    """
+    if not agnes_service.api_key:
+        raise HTTPException(status_code=400, detail="请配置 AGNES_API_KEY 环境变量")
+    
+    try:
+        result = agnes_service.generate_image_from_image(
+            image=request.image,
+            prompt=request.prompt,
+            size=request.size,
+            n=request.n,
+            strength=request.strength,
+            negative_prompt=request.negative_prompt
+        )
+        return {
+            "success": True,
+            "model": "agnes-image-2.1-flash",
+            "data": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/image/sizes")
+async def get_supported_sizes():
+    """获取 Agnes Image 支持的图像尺寸"""
+    return {
+        "success": True,
+        "sizes": agnes_service.get_supported_sizes()
     }
