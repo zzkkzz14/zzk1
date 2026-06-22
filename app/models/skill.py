@@ -37,6 +37,7 @@ class SkillType(str, Enum):
     ANALYSIS = "analysis"       # 分析类：需要推理
     CREATIVE = "creative"       # 创意类：需要发散思维
     ROUTINE = "routine"         # 常规类：简单任务
+    IMAGE_GENERATION = "image_generation"  # 图像生成类：需要生成图片
 
 
 class Skill(BaseModel):

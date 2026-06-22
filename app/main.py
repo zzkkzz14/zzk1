@@ -114,10 +114,42 @@ def init_default_skills():
         tags=["quick", "simple"]
     )
     
+    # 图像生成 Skill
+    image_gen_skill = Skill(
+        id="image_generation",
+        name="图像生成",
+        description="使用 Agnes Image 2.1 Flash 生成图像",
+        skill_type=SkillType.IMAGE_GENERATION,
+        priority=SkillPriority.HIGH,
+        process_steps=[
+            ProcessStep(name="解析需求", description="分析用户要生成的图像内容", required=True, order=1),
+            ProcessStep(name="构建提示词", description="根据需求构建结构化提示词", required=True, order=2),
+            ProcessStep(name="调用API", description="调用 Agnes Image API 生成图像", required=True, order=3),
+            ProcessStep(name="返回结果", description="返回生成的图像URL", required=True, order=4)
+        ],
+        output_constraints=OutputConstraint(
+            format_hint="JSON 格式，包含图像 URL",
+            must_include=["url"]
+        ),
+        guidelines=[
+            "使用结构化提示词（主体+风格+细节）",
+            "根据场景选择合适的图像尺寸",
+            "添加适当的负面提示词提高质量"
+        ],
+        forbidden_actions=[
+            "不要生成违法违规内容",
+            "不要生成未经授权的人物肖像",
+            "不要过度描述图像内容"
+        ],
+        trigger_keywords=["生成图片", "生成图像", "画", "图片", "图像", "设计", "插画", "海报", "logo", "封面"],
+        tags=["image", "generation", "design", "art"]
+    )
+    
     # 注册默认 Skills
     registry.register(coding_skill)
     registry.register(research_skill)
     registry.register(concise_skill)
+    registry.register(image_gen_skill)
 
 
 @app.on_event("startup")
